@@ -1,16 +1,17 @@
 /* Colors */
 :root {
     /* LIGHT THEME COLORS */
-    --whoogle-logo: #685e79;
-    --whoogle-page-bg: #ffffff;
-    --whoogle-element-bg: #4285f4;
-    --whoogle-text: #000000;
-    --whoogle-contrast-text: #ffffff;
+    --whoogle-logo: #3b82f6; /* Blue proxy shield color */
+    --whoogle-page-bg: #ffffff; /* Pure white page background */
+    --whoogle-element-bg: #ffffff; /* Pure white search bar/cards */
+    --whoogle-text: #202124;
+    --whoogle-contrast-text: #5f6368;
     --whoogle-secondary-text: #70757a;
     --whoogle-result-bg: #ffffff;
-    --whoogle-result-title: #1967d2;
-    --whoogle-result-url: #0d652d;
-    --whoogle-result-visited: #4b11a8;
+    --whoogle-result-title: #1a0dab;
+    --whoogle-result-url: #202124;
+    --whoogle-result-visited: #609;
+    --whoogle-primary-btn: #0ea5e9; /* Light blue button color */
 
     /* DARK THEME COLORS */
     --whoogle-dark-logo: #685e79;
@@ -26,29 +27,29 @@
 }
 
 #whoogle-w {
-    fill: #4285f4;
+    fill: var(--whoogle-text);
 }
 
 #whoogle-h {
-    fill: #ea4335;
+    fill: var(--whoogle-text);
 }
 
 #whoogle-o-1 {
-    fill: #fbbc05;
+    fill: var(--whoogle-text);
 }
 
 #whoogle-o-2 {
-    fill: #4285f4;
+    fill: var(--whoogle-text);
 }
 
 #whoogle-g {
-    fill: #34a853;
+    fill: var(--whoogle-text);
 }
 
 #whoogle-l {
-    fill: #ea4335;
+    fill: var(--whoogle-text);
 }
 
 #whoogle-e {
-    fill: #fbbc05;
+    fill: var(--whoogle-text);
 }

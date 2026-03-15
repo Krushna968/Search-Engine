@@ -42,7 +42,57 @@
             src="{{ lingva_url }}/auto/{{ translate_to }}/{{ translate_str }}">
     </iframe>
 {% endif %}
-{{ response|safe }}
+<div class="modern-results-container" style="display: flex; max-width: 1300px; margin: 0 auto; padding: 20px 20px 0 170px;">
+    <div class="modern-results-left" style="width: 652px; flex-shrink: 0;">
+        <div class="results-stats" style="font-size: 14px; color: var(--whoogle-secondary-text); padding-bottom: 15px;">About 1,240,000 results (0.42 seconds)</div>
+        {{ response|safe }}
+    </div>
+    
+    <div class="modern-results-right" style="margin-left: 80px; width: 360px; flex-shrink: 0;">
+        <div class="whoogle-info-card" style="border: 1px solid rgba(13, 162, 231, 0.1); border-radius: 12px; overflow: hidden; background: white; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,0.05);">
+            <div class="card-header-bg" style="background: rgba(13, 162, 231, 0.1); border-bottom: 1px solid rgba(13, 162, 231, 0.1); padding: 25px 0; display: flex; justify-content: center; align-items: center; position: relative;">
+                <div style="position: absolute; inset: 0; opacity: 0.2; background-image: radial-gradient(#0da2e7 1px, transparent 1px); background-size: 10px 10px;"></div>
+                <svg viewBox="0 0 24 24" width="48" height="48" stroke="#0da2e7" stroke-width="1.5" fill="none" style="z-index: 10;"><path d="M12 2a10 10 0 0 1 10 10c0 5.52-4.48 10-10 10S2 17.52 2 12A10 10 0 0 1 12 2z"></path><path d="M12 6a6 6 0 0 1 6 6M12 10a2 2 0 0 1 2 2"></path><path d="M12 14v4M8 12c0 2.21 1.79 4 4 4s4-1.79 4-4M6 12a6 6 0 0 1 6-6"></path></svg>
+            </div>
+            <div class="card-body" style="padding: 24px;">
+                <div class="card-title-row" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                    <div class="card-title-text">
+                        <h2 style="margin: 0; font-size: 24px; font-weight: 700; color: #0f172a;">Whoogle</h2>
+                        <span style="font-size: 14px; color: #64748b;">Privacy Search Proxy</span>
+                    </div>
+                    <button class="share-btn" style="background: var(--whoogle-page-bg); border: none; cursor: pointer; color: #0da2e7; padding: 8px; border-radius: 8px;"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line></svg></button>
+                </div>
+                <p class="card-desc" style="font-size: 14px; color: #475569; line-height: 1.6; margin-bottom: 24px;">Whoogle Search is a self-hosted metasearch engine that provides Google search results without ads, javascript, tracking, or cookies. It acts as a transparent proxy between the user and Google.</p>
+                
+                <div class="card-meta" style="margin-bottom: 24px; display: flex; flex-direction: column; gap: 16px;">
+                    <div class="meta-item" style="display: flex; align-items: center; gap: 12px;">
+                        <svg viewBox="0 0 24 24" width="20" height="20" stroke="#0ea5e9" stroke-width="2" fill="none"><polyline points="16 18 22 12 16 6"></polyline><polyline points="8 6 2 12 8 18"></polyline></svg>
+                        <div class="meta-text" style="font-size: 14px; line-height: 1.4;">
+                            <strong style="color: #0f172a; font-weight: 600;">Developer</strong><br>
+                            <span style="color: #64748b;">Krushna Rasal, Sayli Mane, Parth Videkar and Prachi</span>
+                        </div>
+                    </div>
+                </div>
+
+                <hr style="border: none; border-top: 1px solid rgba(13, 162, 231, 0.1); margin: 24px 0;" />
+
+                <div class="card-tags" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <span class="tag" style="background: rgba(13, 162, 231, 0.05); color: #0da2e7; border: 1px solid rgba(13, 162, 231, 0.1); font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 9999px;">Ad-Free</span>
+                    <span class="tag" style="background: rgba(13, 162, 231, 0.05); color: #0da2e7; border: 1px solid rgba(13, 162, 231, 0.1); font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 9999px;">No Tracking</span>
+                    <span class="tag" style="background: rgba(13, 162, 231, 0.05); color: #0da2e7; border: 1px solid rgba(13, 162, 231, 0.1); font-size: 12px; font-weight: 500; padding: 4px 12px; border-radius: 9999px;">Open Source</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="privacy-tip-card" style="background: rgba(13, 162, 231, 0.05); border: 1px solid rgba(13, 162, 231, 0.2); border-radius: 12px; padding: 16px;">
+            <div class="tip-header" style="display: flex; align-items: center; color: #0da2e7; margin-bottom: 8px;">
+                <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" style="margin-right: 8px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                <strong style="font-size: 14px;">Privacy Tip</strong>
+            </div>
+            <p style="margin: 0; font-size: 12px; color: #475569; line-height: 1.5;">Host Whoogle on your own home server or a VPS for maximum privacy and control over your search data.</p>
+        </div>
+    </div>
+</div>
 </body>
 {% include 'footer.html' %}
 {% if bundle_static() %}

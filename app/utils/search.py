@@ -143,6 +143,15 @@ class Search:
                                 config=self.config,
                                 query=self.query,
                                 page_url=self.request.url)
+
+        # Check if SearX, Brave, or SerpAPI Search should be used
+        provider = os.getenv('SEARCH_PROVIDER', '').lower()
+        if provider == 'serpapi':
+            return self._generate_serpapi_response(content_filter, root_url, mobile)
+        elif provider == 'searx':
+            return self._generate_searx_response(content_filter, root_url, mobile)
+        elif provider == 'brave':
+            return self._generate_brave_response(content_filter, root_url, mobile)
         
         # Check if CSE (Custom Search Engine) should be used
         use_cse = (
@@ -157,7 +166,50 @@ class Search:
         
         # Default: Use traditional scraping method
         return self._generate_scrape_response(content_filter, root_url, mobile)
-    
+
+    def _generate_serpapi_response(self, content_filter: Filter, root_url: str, mobile: bool) -> str:
+        """Generate response using SerpAPI API"""
+        from app.serpapi_client import SerpApiClient
+        api_key = os.getenv('SERPAPI_KEY', '')
+        client = SerpApiClient(api_key=api_key)
+        
+        html_content = client.search(self.query)
+        self.full_query = self.query
+        
+        # Parse and filter the HTML
+        html_soup = bsoup(html_content, 'html.parser')
+        formatted_results = content_filter.clean(html_soup)
+        return str(formatted_results)
+
+    def _generate_searx_response(self, content_filter: Filter, root_url: str, mobile: bool) -> str:
+        """Generate response using free SearX API"""
+        from app.searx_client import SearxSearchClient
+        client = SearxSearchClient()
+        
+        html_content = client.search(self.query)
+        self.full_query = self.query
+        
+        # Parse and filter the HTML
+        html_soup = bsoup(html_content, 'html.parser')
+        formatted_results = content_filter.clean(html_soup)
+        return str(formatted_results)
+
+    def _generate_brave_response(self, content_filter: Filter, root_url: str, mobile: bool) -> str:
+        """Generate response using Brave Search API"""
+        from app.brave_client import BraveSearchClient
+        api_key = os.getenv('BRAVE_API_KEY', '')
+        client = BraveSearchClient(api_key=api_key)
+        
+        # Get pagination start index from request params if needed
+        # Brave handles pagination differently, normally through 'offset', but we're keeping it simple for now and sending 10 count
+        html_content = client.search(self.query)
+        self.full_query = self.query
+        
+        # Parse and filter the HTML
+        html_soup = bsoup(html_content, 'html.parser')
+        formatted_results = content_filter.clean(html_soup)
+        return str(formatted_results)
+
     def _generate_cse_response(self, content_filter: Filter, root_url: str, mobile: bool) -> str:
         """Generate response using Google Custom Search API
         

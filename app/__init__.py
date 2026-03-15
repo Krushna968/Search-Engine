@@ -194,8 +194,9 @@ app.config['CSP'] = 'default-src \'none\';' \
                     'frame-src ' + translate_url + ';' \
                     'manifest-src \'self\';' \
                     'img-src \'self\' data:;' \
-                    'style-src \'self\' \'unsafe-inline\';' \
-                    'script-src \'self\';' \
+                    'style-src \'self\' \'unsafe-inline\' https://fonts.googleapis.com;' \
+                    'font-src \'self\' https://fonts.gstatic.com;' \
+                    'script-src \'self\' \'unsafe-inline\' \'unsafe-eval\' https://cdn.tailwindcss.com;' \
                     'media-src \'self\';' \
                     'connect-src \'self\';'
 
