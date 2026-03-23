@@ -12,20 +12,26 @@ function startVoiceSearch() {
     const recognition = new SpeechRecognition();
 
     recognition.lang = voiceLang;
-    recognition.interimResults = false;
+    recognition.interimResults = true; // Enables capturing voice and writing instantly
     recognition.maxAlternatives = 1;
 
     micBtn.classList.add('text-primary', 'animate-pulse');
     micBtn.querySelector('span').innerText = 'hearing';
 
     recognition.onresult = (event) => {
-        const transcript = event.results[0][0].transcript;
-        searchBar.value = transcript;
-        micBtn.classList.remove('text-primary', 'animate-pulse');
-        micBtn.querySelector('span').innerText = 'mic';
-        
-        // Auto submit
-        document.getElementById('search-form').submit();
+        let interimTranscript = '';
+        let finalTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+            if (event.results[i].isFinal) {
+                finalTranscript += event.results[i][0].transcript;
+            } else {
+                interimTranscript += event.results[i][0].transcript;
+            }
+        }
+
+        // Show whatever is available, preferring final transcript along with any ongoing interim
+        searchBar.value = finalTranscript + interimTranscript;
     };
 
     recognition.onerror = (event) => {
@@ -38,6 +44,11 @@ function startVoiceSearch() {
     recognition.onend = () => {
         micBtn.classList.remove('text-primary', 'animate-pulse');
         micBtn.querySelector('span').innerText = 'mic';
+        
+        // Auto submit if there is text in the search bar when the mic stops
+        if (searchBar.value.trim() !== '') {
+            document.getElementById('search-form').submit();
+        }
     };
 
     recognition.start();
