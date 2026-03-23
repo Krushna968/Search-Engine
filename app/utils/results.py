@@ -416,6 +416,68 @@ def add_currency_card(soup: BeautifulSoup,
     return soup
 
 
+class CustomRanker:
+    """
+    A custom ranking algorithm designed to prioritize relevance, authority, 
+    and freshness in search results.
+    """
+    
+    # Authority boost for educational and research domains
+    AUTHORITY_DOMAINS = ['.edu', '.gov', 'wikipedia.org', 'reuters.com', 'bloomberg.com']
+    
+    def __init__(self, query):
+        self.query = query.lower()
+        self.query_terms = [term for term in self.query.split() if len(term) > 2]
+
+    def score_result(self, result):
+        score = 0
+        title = result.get('title', '').lower()
+        content = result.get('content', '').lower()
+        href = result.get('href', '').lower()
+
+        # 1. Keyword Relevance (Title is weighted more)
+        for term in self.query_terms:
+            if term in title:
+                score += 15
+            if term in content:
+                score += 5
+
+        # 2. Domain Authority Boost
+        for domain in self.AUTHORITY_DOMAINS:
+            if domain in href:
+                score += 20
+                break
+
+        # 3. Exact Phrase Match
+        if self.query in title:
+            score += 30
+        if self.query in content:
+            score += 15
+
+        # 4. Freshness Heuristic (Check for current or recent years)
+        current_year = "2024" # Heuristic
+        next_year = "2025"
+        if current_year in content or next_year in content:
+            score += 10
+
+        # 5. Length/Quality Heuristic
+        if len(content) > 100:
+            score += 5
+            
+        return score
+
+    def rerank(self, results):
+        """
+        Takes a list of search result dictionaries and returns them 
+        sorted by the custom scoring algorithm.
+        """
+        for res in results:
+            res['custom_score'] = self.score_result(res)
+            
+        return sorted(results, key=lambda x: x['custom_score'], reverse=True)
+
+
+
 def get_tabs_content(tabs: dict,
                      full_query: str,
                      search_type: str,

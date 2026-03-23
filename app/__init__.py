@@ -281,8 +281,16 @@ if app.config['BUNDLE_STATIC']:
 
 # Templating functions
 app.jinja_env.globals.update(clean_query=clean_query)
+def debug_cb_url(f):
+    print(f"DEBUG: cb_url requested for {f}")
+    try:
+        return app.config['CACHE_BUSTING_MAP'][f.lower()]
+    except KeyError:
+        print(f"DEBUG: KeyError for {f}. Map keys: {list(app.config['CACHE_BUSTING_MAP'].keys())}")
+        raise
+
 app.jinja_env.globals.update(
-    cb_url=lambda f: app.config['CACHE_BUSTING_MAP'][f.lower()])
+    cb_url=debug_cb_url)
 app.jinja_env.globals.update(
     bundle_static=lambda: app.config.get('BUNDLE_STATIC', False))
 

@@ -71,11 +71,18 @@
 <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
 <span class="material-symbols-outlined text-slate-400 group-focus-within:text-primary transition-colors">search</span>
 </div>
-<input name="q" id="search-bar" autofocus="autofocus" autocomplete="off" autocapitalize="none" spellcheck="false" autocorrect="off" dir="auto" class="block w-full h-16 pl-14 pr-14 text-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full shadow-sm group-hover:shadow-md focus:shadow-lg focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none text-slate-900 dark:text-slate-100 placeholder-slate-400" placeholder="Search the web privately..." type="text"/>
-<div class="absolute inset-y-0 right-0 pr-5 flex items-center">
-<button type="submit" class="p-2 rounded-full hover:bg-primary/10 text-slate-400 hover:text-primary transition-colors">
-<span class="material-symbols-outlined">mic</span>
-</button>
+<input name="q" id="search-bar" onkeyup="handleUserInput()" autofocus="autofocus" autocomplete="off" autocapitalize="none" spellcheck="false" autocorrect="off" dir="auto" class="block w-full h-16 pl-14 pr-14 text-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-full shadow-sm group-hover:shadow-md focus:shadow-lg focus:ring-4 focus:ring-primary/10 focus:border-primary transition-all outline-none text-slate-900 dark:text-slate-100 placeholder-slate-400" placeholder="Search the web privately..." type="text"/>
+<div class="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
+    <select id="voice-lang" class="bg-transparent border-none text-xs text-slate-400 focus:ring-0 cursor-pointer hover:text-primary transition-colors pr-8">
+        <option value="en-US">EN</option>
+        <option value="hi-IN">HI</option>
+        <option value="mr-IN">MR</option>
+        <option value="es-ES">ES</option>
+        <option value="fr-FR">FR</option>
+    </select>
+    <button type="button" id="mic-btn" onclick="startVoiceSearch()" class="p-2 rounded-full hover:bg-primary/10 text-slate-400 hover:text-primary transition-colors" title="Voice Search">
+        <span class="material-symbols-outlined">mic</span>
+    </button>
 </div>
 </div>
 <!-- Action Buttons -->
@@ -124,4 +131,14 @@
 <a class="hover:text-primary transition-colors" href="#">API</a>
 </div>
 </footer>
+{% if bundle_static() %}
+    <script src="/{{ cb_url('bundle.js') }}" defer></script>
+{% else %}
+    {% if autocomplete_enabled == '1' %}
+        <script src="{{ cb_url('autocomplete.js') }}"></script>
+    {% endif %}
+    <script src="{{ cb_url('utils.js') }}"></script>
+    <script src="{{ cb_url('keyboard.js') }}"></script>
+    <script src="static/js/voice_search.js"></script>
+{% endif %}
 </body></html>

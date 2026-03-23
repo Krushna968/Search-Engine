@@ -33,6 +33,8 @@ from bs4 import BeautifulSoup as bsoup
 from flask import jsonify, make_response, request, redirect, render_template, \
     send_file, session, url_for, g
 import httpx
+from app.services.ai_summary import get_ai_summary_with_meta
+from app.utils.results import CustomRanker
 from cryptography.fernet import Fernet, InvalidToken
 from cryptography.exceptions import InvalidSignature
 from werkzeug.datastructures import MultiDict
@@ -472,116 +474,76 @@ def search():
     home_url = f"home?preferences={preferences}" if preferences else "home"
     cleanresponse = str(response).replace("andlt;","&lt;").replace("andgt;","&gt;")
 
-    if wants_json:
-        # Build a parsable JSON from the filtered soup
-        json_soup = bsoup(str(response), 'html.parser')
-        results = []
-        seen = set()
-        
-        # Find all result containers (using known result classes)
-        result_divs = json_soup.find_all('div', class_=['ZINbbc', 'ezO2md'])
-        
-        if result_divs:
-            # Process structured Google results with container divs
-            for div in result_divs:
-                # Find the first valid link in this result container
-                link = None
-                for a in div.find_all('a', href=True):
-                    if a['href'].startswith('http'):
-                        link = a
+    # Extract results for both JSON and AI Summary
+    json_soup = bsoup(str(response), 'html.parser')
+    extracted_results = []
+    seen = set()
+    result_divs = json_soup.find_all('div', class_=['ZINbbc', 'ezO2md'])
+    
+    if result_divs:
+        for div in result_divs:
+            link = None
+            for a in div.find_all('a', href=True):
+                if a['href'].startswith('http'):
+                    link = a
+                    break
+            if not link: continue
+            href = link['href']
+            if href in seen: continue
+            text = clean_text_spacing(div.get_text(separator=' ', strip=True))
+            if not text: continue
+            
+            title = ''
+            h3_tag = div.find('h3')
+            if h3_tag:
+                title = clean_text_spacing(h3_tag.get_text(separator=' ', strip=True))
+            else:
+                title_span = div.find('span', class_='CVA68e')
+                if title_span:
+                    title = clean_text_spacing(title_span.get_text(separator=' ', strip=True))
+                elif link:
+                    title = clean_text_spacing(link.get_text(separator=' ', strip=True))
+            
+            content = ''
+            snippet_selectors = [{'class_': 'VwiC3b'}, {'class_': 'FrIlee'}, {'class_': 's'}, {'class_': 'st'}]
+            for selector in snippet_selectors:
+                snippet_elem = div.find('span', selector) or div.find('div', selector)
+                if snippet_elem:
+                    content = clean_text_spacing(snippet_elem.get_text(separator=' ', strip=True))
+                    if content and not content.startswith('www.') and '›' not in content:
                         break
+                    else: content = ''
+            
+            if not content and title:
+                content = text[len(title):].strip() if text.startswith(title) else text
+            elif not content:
+                content = text
                 
-                if not link:
-                    continue
-                    
-                href = link['href']
-                if href in seen:
-                    continue
-                
-                # Get all text from the result container, not just the link
-                text = clean_text_spacing(div.get_text(separator=' ', strip=True))
-                if not text:
-                    continue
-                
-                # Extract title and content separately
-                # Title is typically in an h3 tag, CVA68e span, or the main link text
-                title = ''
-                # First try h3 tag
-                h3_tag = div.find('h3')
-                if h3_tag:
-                    title = clean_text_spacing(h3_tag.get_text(separator=' ', strip=True))
-                else:
-                    # Try CVA68e class (common title class in Google results)
-                    title_span = div.find('span', class_='CVA68e')
-                    if title_span:
-                        title = clean_text_spacing(title_span.get_text(separator=' ', strip=True))
-                    elif link:
-                        # Fallback to link text, but exclude URL breadcrumb
-                        title = clean_text_spacing(link.get_text(separator=' ', strip=True))
-                
-                # Content is the description/snippet text
-                # Look for description/snippet elements
-                content = ''
-                # Common classes for snippets/descriptions in Google results
-                snippet_selectors = [
-                    {'class_': 'VwiC3b'},   # Standard snippet
-                    {'class_': 'FrIlee'},   # Alternative snippet class (common in current Google)
-                    {'class_': 's'},        # Another snippet class
-                    {'class_': 'st'},       # Legacy snippet class
-                ]
-                
-                for selector in snippet_selectors:
-                    snippet_elem = div.find('span', selector) or div.find('div', selector)
-                    if snippet_elem:
-                        # Get text but exclude any nested links (like "Related searches")
-                        content = clean_text_spacing(snippet_elem.get_text(separator=' ', strip=True))
-                        # Only use if it's substantial content (not just the URL breadcrumb)
-                        if content and not content.startswith('www.') and '›' not in content:
-                            break
-                        else:
-                            content = ''
-                
-                # If no specific content found, use text minus title as fallback
-                if not content and title:
-                    # Try to extract content by removing title from full text
-                    if text.startswith(title):
-                        content = text[len(title):].strip()
-                    else:
-                        content = text
-                elif not content:
-                    content = text
-                    
-                seen.add(href)
-                results.append({
-                    'href': href,
-                    'text': text,
-                    'title': title,
-                    'content': content
-                })
-        else:
-            # Fallback: extract links directly if no result containers found
-            for a in json_soup.find_all('a', href=True):
-                href = a['href']
-                if not href.startswith('http'):
-                    continue
-                if href in seen:
-                    continue
-                text = clean_text_spacing(a.get_text(separator=' ', strip=True))
-                if not text:
-                    continue
-                seen.add(href)
-                # In fallback mode, the link text serves as both title and text
-                results.append({
-                    'href': href,
-                    'text': text,
-                    'title': text,
-                    'content': ''
-                })
+            seen.add(href)
+            extracted_results.append({'href': href, 'text': text, 'title': title, 'content': content})
+    else:
+        for a in json_soup.find_all('a', href=True):
+            href = a['href']
+            if not href.startswith('http') or href in seen: continue
+            text = clean_text_spacing(a.get_text(separator=' ', strip=True))
+            if not text: continue
+            seen.add(href)
+            extracted_results.append({'href': href, 'text': text, 'title': text, 'content': ''})
 
+    # AI summary is loaded async by ai_summary.js — no blocking here
+    ai_summary_enabled = bool(os.getenv('GEMINI_API_KEY') or os.getenv('OLLAMA_URL', 'http://localhost:11434'))
+
+    # Use Custom Ranking Algorithm if requested
+    use_custom_rank = request.args.get('custom_rank') == '1'
+    if use_custom_rank:
+        ranker = CustomRanker(urlparse.unquote(query))
+        extracted_results = ranker.rerank(extracted_results)
+
+    if wants_json:
         return jsonify({
             'query': urlparse.unquote(query),
             'search_type': search_util.search_type,
-            'results': results
+            'results': extracted_results
         })
 
     # Get the user agent that was used for the search
@@ -613,6 +575,9 @@ def search():
         response=cleanresponse,
         version_number=app.config['VERSION_NUMBER'],
         used_user_agent=used_user_agent,
+        ai_summary_enabled=ai_summary_enabled and not search_util.search_type,
+        custom_rank=use_custom_rank,
+        extracted_results=extracted_results,
         search_header=render_template(
             'header.html',
             home_url=home_url,
@@ -626,6 +591,33 @@ def search():
             search_type=search_util.search_type,
             mobile=g.user_request.mobile,
             tabs=tabs)).replace("  ", "")
+
+
+@app.route('/ai_summary', methods=['GET'])
+@session_required
+def ai_summary_endpoint():
+    """Async endpoint for AI summary. Called by ai_summary.js after page load."""
+    import json as _json
+    query = request.args.get('q', '').strip()
+    results_raw = request.args.get('results', '[]')
+    force_refresh = request.args.get('refresh', '0') == '1'
+
+    if not query:
+        return jsonify({'summary': 'No query provided.', 'source': 'error', 'cached': False})
+
+    try:
+        results = _json.loads(urlparse.unquote(results_raw))
+    except Exception:
+        results = []
+
+    # Force bypass cache if refresh=1
+    if force_refresh:
+        from app.services import ai_summary as _ai_mod
+        key = _ai_mod._cache_key(query)
+        _ai_mod._cache.pop(key, None)
+
+    result = get_ai_summary_with_meta(query, results)
+    return jsonify(result)
 
 
 @app.route(f'/{Endpoint.config}', methods=['GET', 'POST', 'PUT'])

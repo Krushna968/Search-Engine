@@ -44,7 +44,105 @@
 {% endif %}
 <div class="modern-results-container" style="display: flex; max-width: 1300px; margin: 0 auto; padding: 20px 20px 0 170px;">
     <div class="modern-results-left" style="width: 652px; flex-shrink: 0;">
-        <div class="results-stats" style="font-size: 14px; color: var(--whoogle-secondary-text); padding-bottom: 15px;">About 1,240,000 results (0.42 seconds)</div>
+        {% if ai_summary_enabled %}
+        {%- set _results_json = extracted_results | map(attribute='title') | list | tojson %}
+        <div id="ai-summary-card"
+             class="ai-summary-card"
+             data-query="{{ query | e }}"
+             data-results="{{ extracted_results[:6] | tojson | urlencode }}"
+             style="border-radius:18px; 
+                    background:linear-gradient(145deg, rgba(232, 240, 254, 0.7) 0%, rgba(255, 255, 255, 0.8) 100%);
+                    border:1px solid rgba(13, 162, 231, 0.15); 
+                    box-shadow:0 6px 16px rgba(0,0,0,0.04), 0 1px 4px rgba(0,0,0,0.02);
+                    margin-bottom:28px; position:relative; overflow:hidden;">
+             
+             <!-- decorative backdrop glow -->
+             <div style="position:absolute; top:-50px; left:-50px; width:150px; height:150px; 
+                         background:radial-gradient(circle, rgba(13, 162, 231, 0.1) 0%, transparent 70%); 
+                         pointer-events:none;"></div>
+
+            <!-- Header -->
+            <div style="padding:18px 20px 14px; display:flex; align-items:flex-start; justify-content:space-between; position:relative; z-index:1;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <!-- Sparkle Icon -->
+                    <div style="background:linear-gradient(135deg, #0da2e7, #0672a6); width:28px; height:28px; border-radius:8px; display:flex; align-items:center; justify-content:center; box-shadow:0 2px 6px rgba(13,162,231,0.3);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/>
+                        </svg>
+                    </div>
+                    <span style="font-size:16px; font-weight:600; color:#202124; letter-spacing:-0.2px;">AI Overview</span>
+                </div>
+                <!-- Refresh Button (hidden initially) -->
+                <button id="ai-refresh-btn"
+                        title="Regenerate summary"
+                        style="display:none; align-items:center; gap:5px; padding:6px 14px;
+                               border:1px solid rgba(13,162,231,0.2); border-radius:20px;
+                               background:#fff; color:#0da2e7; cursor:pointer; font-weight:500;
+                               font-size:12px; box-shadow:0 1px 3px rgba(0,0,0,0.02); transition:all 0.2s;">
+                    <svg viewBox="0 0 24 24" width="13" height="13" stroke="currentColor" stroke-width="2.5" fill="none">
+                        <polyline points="23 4 23 10 17 10"/>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                    </svg>
+                    Regenerate
+                </button>
+            </div>
+
+            <!-- Generate button (initial state) -->
+            <div id="ai-generate-btn-wrap" style="padding:0 20px 20px; position:relative; z-index:1;">
+                <button id="ai-generate-btn"
+                        style="padding:10px 20px; border:none; border-radius:24px;
+                               background:#0da2e7; color:#fff; font-size:14px; cursor:pointer;
+                               font-weight:500; transition:all 0.2s; box-shadow:0 2px 8px rgba(13,162,231,0.3);
+                               display:flex; align-items:center; gap:8px;">
+                    Generate intelligent summary
+                </button>
+            </div>
+
+            <!-- Summary Content Wrapper -->
+            <div id="ai-summary-content" style="display:none; position:relative; z-index:1;">
+                <div id="ai-summary-body-wrapper" style="position:relative; transition:max-height 0.4s ease-out; overflow:hidden; padding:0 20px 0;">
+                    <div id="ai-summary-body" style="font-size:14px; line-height:1.6; color:#3c4043; padding-bottom:12px;">
+                        <!-- Text injected here by JS -->
+                    </div>
+                </div>
+
+                <!-- Footer (Source + Expand Toggle) -->
+                <div style="padding:12px 20px 16px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid rgba(0,0,0,0.04);">
+                    <div id="ai-summary-footer" style="font-size:12px; color:#5f6368; display:flex; align-items:center; gap:6px;">
+                        <!-- Source injected here -->
+                    </div>
+                    <button id="ai-expand-btn" style="display:none; background:none; border:none; color:#0da2e7; font-size:13px; font-weight:500; cursor:pointer; align-items:center; gap:4px;">
+                        Show more <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="results-top-bar" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--whoogle-border); padding-bottom: 10px;">
+            <div class="results-stats" style="font-size: 14px; color: var(--whoogle-secondary-text);">About {{ extracted_results|length }} results (0.42 seconds)</div>
+            <div class="custom-algo-toggle" style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 12px; color: var(--whoogle-secondary-text); font-weight: 500;">Custom Algorithm:</span>
+                <a href="/search?q={{ query }}{% if not custom_rank %}&custom_rank=1{% endif %}" 
+                   style="position: relative; width: 36px; height: 18px; background: {% if custom_rank %}#0da2e7{% else %}#ccc{% endif %}; border-radius: 10px; transition: background 0.3s;">
+                    <div style="position: absolute; width: 14px; height: 14px; background: white; border-radius: 50%; top: 2px; left: {% if custom_rank %}20px{% else %}2px{% endif %}; transition: left 0.3s; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></div>
+                </a>
+            </div>
+        </div>
+
+        {% if custom_rank %}
+        <div class="algo-details" style="background: rgba(13, 162, 231, 0.03); border: 1px dashed #0da2e7; border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 13px; color: var(--whoogle-text);">
+            <div style="display: flex; align-items: center; gap: 6px; margin-bottom: 6px; color: #0da2e7; font-weight: 600;">
+                <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
+                Custom Weighted Ranking Active
+            </div>
+            <ul style="margin: 0; padding-left: 20px; color: var(--whoogle-secondary-text); list-style-type: square;">
+                <li><strong>Relevance:</strong> Enhanced weight for query terms in headings (15x) and keywords (5x).</li>
+                <li><strong>Authority:</strong> Priority boost for domains like .edu, .gov, and validated news sources.</li>
+                <li><strong>Freshness:</strong> Temporal heuristic applied for 2024/2025 content.</li>
+            </ul>
+        </div>
+        {% endif %}
         {{ response|safe }}
     </div>
     
@@ -104,5 +202,7 @@
     <script src="{{ cb_url('utils.js') }}"></script>
     <script src="{{ cb_url('keyboard.js') }}"></script>
     <script src="{{ cb_url('currency.js') }}"></script>
+    <script src="static/js/voice_search.js"></script>
+    <script src="static/js/ai_summary.js"></script>
 {% endif %}
 </html>
